@@ -242,68 +242,45 @@ else
     dpkg -x "$DEB" "$apt_layer/"
   done
 
-  topic "Writing exec.d script and environment variables"
-
-  exports_path=$apt_layer/exec.d/000_apt.sh
-  mkdir -p "$apt_layer/exec.d"
-  touch "$exports_path"
-  chmod 755 "$exports_path"
-  cat << EOF > "$exports_path"
-#!/usr/bin/env bash
-set -eo pipefail
-
-echo "Loading apt package environment variables"
-
-cat << EOF >&3
-EOF
+  topic "Writing environment variables"
 
   apt_env_dir=$apt_layer/env
   mkdir -p "$apt_env_dir"
 
   path="$apt_layer/usr/bin"
   echo "PATH=$path" | indent
-  echo "PATH = \"$path:\$PATH\"" >> "$exports_path"
   echo -n "$path" > "$apt_env_dir/PATH.prepend"
   echo -n ":" > "$apt_env_dir/PATH.delim"
 
   ld_library_path=$apt_layer/lib/aarch64-linux-gnu:$apt_layer/lib/x86_64-linux-gnu:$apt_layer/lib/i386-linux-gnu:$apt_layer/lib:$apt_layer/usr/lib/aarch64-linux-gnu:$apt_layer/usr/lib/x86_64-linux-gnu:$apt_layer/usr/lib/i386-linux-gnu:$apt_layer/usr/lib
   echo "LD_LIBRARY_PATH=$ld_library_path" | indent
-  echo "LD_LIBRARY_PATH = \"$ld_library_path:\$LD_LIBRARY_PATH\"" >> "$exports_path"
   echo -n "$ld_library_path" > "$apt_env_dir/LD_LIBRARY_PATH.prepend"
   echo -n ":" > "$apt_env_dir/LD_LIBRARY_PATH.delim"
 
   library_path=$ld_library_path
   echo "LIBRARY_PATH=$library_path" | indent
-  echo "LIBRARY_PATH = \"$library_path:\$LIBRARY_PATH\"" >> "$exports_path"
   echo -n "$library_path" > "$apt_env_dir/LIBRARY_PATH.prepend"
   echo -n ":" > "$apt_env_dir/LIBRARY_PATH.delim"
 
   include_path=$apt_layer/usr/include:$apt_layer/usr/include/aarch64-linux-gnu:$apt_layer/usr/include/x86_64-linux-gnu
   echo "INCLUDE_PATH=$include_path" | indent
-  echo "INCLUDE_PATH = \"$include_path:\$INCLUDE_PATH\"" >> "$exports_path"
   echo -n "$include_path" > "$apt_env_dir/INCLUDE_PATH.prepend"
   echo -n ":" > "$apt_env_dir/INCLUDE_PATH.delim"
 
   cpath="\$INCLUDE_PATH"
   echo "CPATH=$cpath" | indent
-  echo "CPATH = \"$cpath\"" >> "$exports_path"
   cp "$apt_env_dir"/INCLUDE_PATH.prepend "$apt_env_dir"/CPATH.prepend
   echo -n ":" > "$apt_env_dir/CPATH.delim"
 
   cpppath="\$INCLUDE_PATH"
   echo "CPPPATH=$cpppath" | indent
-  echo "CPPPATH = \"$cpppath\"" >> "$exports_path"
   cp "$apt_env_dir"/INCLUDE_PATH.prepend "$apt_env_dir"/CPPPATH.prepend
   echo -n ":" > "$apt_env_dir/CPPPATH.delim"
 
   pkg_config_path=$apt_layer/usr/lib/aarch64-linux-gnu/pkgconfig:$apt_layer/usr/lib/x86_64-linux-gnu/pkgconfig:$apt_layer/usr/lib/i386-linux-gnu/pkgconfig:$apt_layer/usr/lib/pkgconfig
   echo "PKG_CONFIG_PATH=$pkg_config_path" | indent
-  echo "PKG_CONFIG_PATH = \"$pkg_config_path:\$PKG_CONFIG_PATH\"" >> "$exports_path"
   echo -n "$pkg_config_path" > "$apt_env_dir/PKG_CONFIG_PATH.prepend"
   echo -n ":" > "$apt_env_dir/PKG_CONFIG_PATH.delim"
-
-  echo 'EOF' >> "$exports_path"
-  echo '' >> "$exports_path"
 
   topic "Rewrite package-config files"
   find "$apt_layer" -type f -ipath '*/pkgconfig/*.pc' -print0 | xargs -0 --no-run-if-empty -n 1 sed -i -e 's!^prefix=\(.*\)$!prefix='"$apt_layer"'\1!g'
