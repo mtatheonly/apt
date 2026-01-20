@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - directory: /
+    package-ecosystem: "github-actions"
+    cooldown:
+      default-days: 7
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-type: "all"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
