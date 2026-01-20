@@ -12,52 +12,32 @@ jobs:
       - id: checkout
         name: Checkout code
         uses: actions/checkout@v4
-      - if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
-        name: Login to GitHub Package Registry
+
+      - name: Docker login docker.io
+        if: ${{ (github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork) && (github.actor != 'dependabot[bot]') }}
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD }}
+          registry: docker.io
+          username: ${{ secrets.PAKETO_BUILDPACKS_DOCKERHUB_USERNAME }}
+
       - id: setup-pack
-        uses: buildpacks/github-actions/setup-pack@v5.9.7
-      - id: package
-        run: |
-          #!/usr/bin/env bash
-          set -euo pipefail
+        uses: buildpacks/github-actions/setup-pack@v5.10.1
 
-          echo "Installing yj ${YJ_VERSION}"
-          mkdir -p "${HOME}"/bin
-          echo "${HOME}/bin" >> "${GITHUB_PATH}"
-          curl \
-          --location \
-          --show-error \
-          --silent \
-          --output "${HOME}"/bin/yj \
-          "https://github.com/sclevine/yj/releases/download/v${YJ_VERSION}/yj-linux"
-          chmod +x "${HOME}"/bin/yj
-
-          echo "Installing crane ${CRANE_VERSION}"
-          mkdir -p "${HOME}"/bin
-          echo "${HOME}/bin" >> "${GITHUB_PATH}"
-          curl \
-            --show-error \
-            --silent \
-            --location \
-            "https://github.com/google/go-containerregistry/releases/download/v${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz" \
-          | tar -C "${HOME}/bin" -xz crane
-          chmod +x "${HOME}"/bin/crane
-
-          ./scripts/package.sh
-        shell: bash
-        env:
-          REPO: ghcr.io/${{ github.repository_owner }}/buildpacks
-          YJ_VERSION: 5.0.0
-          CRANE_VERSION: 0.20.6
-      - id: register
-        uses: docker://ghcr.io/buildpacks/actions/registry/request-add-entry:5.5.0
+      - uses: buildpacks/github-actions/setup-tools@v5.10.1
         with:
-          token: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          crane-version: 0.20.6
+          yj-version: 5.1.0
+
+      - id: package
+        run: ./scripts/package.sh
+        env:
+          REPO: docker.io/paketobuildpacks/apt
+
+      - id: register
+        uses: docker://ghcr.io/buildpacks/actions/registry/request-add-entry:5.10.1
+        with:
+          token: ${{ secrets.PAKETO_BOT_GITHUB_TOKEN }}
           id: ${{ steps.package.outputs.bp_id }}
           version: ${{ steps.package.outputs.version }}
           address: ${{ steps.package.outputs.address }}
