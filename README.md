@@ -1,53 +1,80 @@
-# apt Buildpack
+# Paketo Buildpack for Apt
 
-[![Version](https://img.shields.io/badge/dynamic/json?url=https://cnb-registry-api.herokuapp.com/api/v1/buildpacks/fagiani/apt&label=Version&query=$.latest.version)](https://github.com/dmikusa/apt-buildpack)
+## Buildpack ID: `paketo-buildpacks/apt`
+## Registry URLs: `docker.io/paketobuildpacks/apt`
 
-This is a [Cloud Native Buildpack](https://buildpacks.io/) that adds support for `apt`-based dependencies during both build and runtime.
+The Paketo Buildpack for Apt is a Cloud Native Buildpack that that allows you to install additional dependencies for both build and runtime using Apt. This *only* works on containers that include a shell and Apt itself.
 
-This buildpack is based on [fagiani/apt-buildpack](https://github.com/fagiani/apt-buildpack) and [heroku-buildpack-apt](https://github.com/heroku/heroku-buildpack-apt).
+## Behavior
 
+This buildpack will participate if all the following conditions are met:
 
-## Usage
+* `<APPLICATION_ROOT>/Aptfile` exists
 
-This buildpack is not meant to be used on its own, and instead should be in used in combination with other buildpacks.
+The buildpack will do the following:
 
-Include a list of `apt` package names to be installed in a file named `Aptfile`; be aware that line ending should be LF, not CRLF.
+* Read the `<APPLICATION_ROOT>/Aptfile`.
+* For each package from the `Aptfile`, it will download and install the package into a layer.
 
-The buildpack automatically downloads and installs the packages when you run a build:
+## Configuration
+
+| Environment Variable | Description |
+| -------------------- | ----------- |
+
+There are no environment variable configuration options.
+
+### Aptfile
+
+Configuration is applied through the `Aptfile`. Each line contains one entry and the file uses `LF` as for a line ending.
+
+The simplest configuration is to just add a package name. This will be looked up in the repos known to apt.
 
 ```
-$ pack build --buildpack dmikusa/apt myapp
+libexample-dev
 ```
 
-#### Aptfile
+You may also point to a `.deb` file.
 
-    # you can list packages
-    libexample-dev
+```
+http://downloads.sourceforge.net/project/wkhtmltopdf/0.12.1/wkhtmltox-0.12.1_linux-precise-amd64.deb
+```
 
-    # or include links to specific .deb files
-    http://downloads.sourceforge.net/project/wkhtmltopdf/0.12.1/wkhtmltox-0.12.1_linux-precise-amd64.deb
+You can add custom apt repos as well. This is only required if you are using packages outside of the standard repositories available to the container. For Paketo projects, that would be the standard Ubuntu repositories.
 
-    # or add custom apt repos (only required if using packages outside of the standard Ubuntu APT repositories)
-    :repo:deb http://cz.archive.ubuntu.com/ubuntu artful main universe
+```
+:repo:deb http://cz.archive.ubuntu.com/ubuntu artful main universe
+```
 
-    # or import GPG keys for custom repos
-    :repo:key https://example.com/repo-signing-key.gpg
+The buildpack also supports adding additional GPG keys, for use with custom repos. This first example uses the `.gpg` format.
 
-    # Note: Keys can be imported in both .asc and .gpg formats
-    :repo:key https://example.com/repo-signing-key.asc
+```
+:repo:key https://example.com/repo-signing-key.gpg
+```
 
-    # You can also import from keyserver.ubuntu.com: 
-    :repo:key CADA0F77901522B3
-    
-    # ...or from a file URL:
-    :repo:key file://key.asc
+You may also use the `.asc` format.
 
-    # NOTE: This key must be relative to the repository root, i.e. file:///etc/keys/foo.asc will not work.
+```
+:repo:key https://example.com/repo-signing-key.asc
+```
+
+You can even import from `keyserver.ubuntu.com`.
+
+```
+:repo:key CADA0F77901522B3
+```
+
+or from a file URL. This must be a relative link to a key that's bundled with the application. You cannot reference arbitrary full paths, i.e. `file:///etc/keys/foo.asc` will not work.
+
+```
+:repo:key file://key.asc
+```
+
+## Bindings
+
+The buildpack optionally accepts the following bindings: None
 
 ## License
 
 MIT
 
-## Disclaimer
-
-This buildpack is experimental and not yet intended for production use.
+Please note that this is not the typical license for Paketo projects, but because this project was contributed to us under the MIT license, we need to continue using that license.

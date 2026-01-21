@@ -1,30 +1,18 @@
 api = "0.10"
 
 [buildpack]
-id = "dmikusa/apt"
-version = "0.0.5"
-name = "apt Packages Buildpack"
-homepage = "https://github.com/dmikusa/apt-buildpack"
-description = "Installs apt packages for further builds and runtime"
-keywords = ["apt", "packages", "ubuntu"]
+id = "paketo-buildpacks/apt"
+version = "0.1.0"
+name = "Paketo Buildpack for Apt"
+homepage = "https://github.com/paketo-buildpacks/apt"
+description = "A Cloud Native Buildpack that that allows you to install additional dependencies for both build and runtime using Apt"
+keywords = ["apt", "packages", "ubuntu", "debian"]
 
 [[buildpack.licenses]]
 type = "MIT"
 
 [[stacks]]
-id = "heroku-18"
-
-[[stacks]]
-id = "heroku-20"
-
-[[stacks]]
-id = "io.buildpacks.stacks.bionic"
-
-[[stacks]]
-id = "io.buildpacks.stacks.jammy"
-
-[[stacks]]
-id = "io.buildpacks.stacks.noble"
+id = "*"
 
 [[targets]]
   arch = "amd64"
