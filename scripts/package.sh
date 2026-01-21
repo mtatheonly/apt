@@ -8,16 +8,11 @@ cp -r bin "${TMPDIR}/bin"
 cp LICENSE "${TMPDIR}/LICENSE"
 pushd "${TMPDIR}/"
 
-if [[ -z "${GITHUB_OUTPUT:-}" ]]; then
-    echo "Packaging buildpack locally..."
-    REPO="docker.io/local/apt"
-else
-    echo "Packaging and publishing buildpack..."
-fi
+echo "Packaging and publishing buildpack..."
 
 BP_ID="$(cat buildpack.toml | yj -t | jq -r .buildpack.id)"
 VERSION="$(cat buildpack.toml | yj -t | jq -r .buildpack.version)"
-PACKAGE="${REPO}/$(echo "$BP_ID" | sed 's/\//_/g')"
+PACKAGE="docker.io/${BP_ID//-/}"
 
 echo "Building ${PACKAGE}:${VERSION}"
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
