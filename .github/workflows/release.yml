@@ -31,8 +31,6 @@ jobs:
 
       - id: package
         run: ./scripts/package.sh
-        env:
-          REPO: docker.io/paketobuildpacks/apt
 
       - id: register
         uses: docker://ghcr.io/buildpacks/actions/registry/request-add-entry:5.10.1
