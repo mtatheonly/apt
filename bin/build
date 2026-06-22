@@ -252,7 +252,9 @@ else
   echo -n "$path" > "$apt_env_dir/PATH.prepend"
   echo -n ":" > "$apt_env_dir/PATH.delim"
 
-  ld_library_path=$apt_layer/lib/aarch64-linux-gnu:$apt_layer/lib/x86_64-linux-gnu:$apt_layer/lib/i386-linux-gnu:$apt_layer/lib:$apt_layer/usr/lib/aarch64-linux-gnu:$apt_layer/usr/lib/x86_64-linux-gnu:$apt_layer/usr/lib/i386-linux-gnu:$apt_layer/usr/lib:$apt_layer/usr/local/lib/aarch64-linux-gnu:$apt_layer/usr/local/lib/x86_64-linux-gnu:$apt_layer/usr/local/lib/i386-linux-gnu:$apt_layer/usr/local/lib
+  library_path="$(find /layers/paketo-buildpacks_apt/ -type f -iregex '.*\.so$' -o -iregex '.*\.so\..*[0-9]$' | xargs -I{} dirname {} | sort | uniq | tr '\n' ':')"
+  ld_library_path="${library_path::-1}"
+  
   echo "LD_LIBRARY_PATH=$ld_library_path" | indent
   echo -n "$ld_library_path" > "$apt_env_dir/LD_LIBRARY_PATH.prepend"
   echo -n ":" > "$apt_env_dir/LD_LIBRARY_PATH.delim"
