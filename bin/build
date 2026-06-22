@@ -100,7 +100,11 @@ else
       curl --silent --show-error --fail -L -z "$PACKAGE_FILE" -o "$PACKAGE_FILE" "$PACKAGE" 2>&1 | indent
     else
       topic "Fetching .debs for $PACKAGE"
-      apt-get $APT_OPTIONS -y $APT_FORCE_YES -d install --reinstall "$PACKAGE" | indent
+      # apt download get files to current dir, saving it as variable to return to it later
+      CURRENT_DIR="$(pwd)"
+      cd $APT_CACHE_DIR/archives
+      apt $APT_OPTIONS download $(apt-cache $APT_OPTIONS depends --recurse --no-recommends --no-suggests  --no-conflicts --no-breaks --no-replaces --no-enhances  --no-pre-depends "$PACKAGE" | grep "^\w") | indent
+      cd "${CURRENT_DIR}"
     fi
   }
 
