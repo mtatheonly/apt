@@ -53,7 +53,7 @@ APT_SOURCELIST_DIR="$apt_layer/sources"   # place custom sources.list here
 APT_SOURCES="$APT_SOURCELIST_DIR/sources.list"
 APT_SOURCEPARTS="$APT_SOURCELIST_DIR/sources.list.d"
 APT_KEYS_DIR="$apt_layer/keys" # place custom GPG keys here
-APT_VERSION=$(apt -v | awk 'NR == 1{ print $2 }')
+APT_VERSION=$(apt-get -v | awk 'NR == 1{ print $2 }')
 
 case "$APT_VERSION" in
   0* | 1.0*) APT_FORCE_YES="--force-yes";;
@@ -100,11 +100,10 @@ else
       curl --silent --show-error --fail -L -z "$PACKAGE_FILE" -o "$PACKAGE_FILE" "$PACKAGE" 2>&1 | indent
     else
       topic "Fetching .debs for $PACKAGE"
-      # apt download get files to current dir, saving it as variable to return to it later
-      CURRENT_DIR="$(pwd)"
-      cd $APT_CACHE_DIR/archives
-      apt $APT_OPTIONS download $(apt-cache $APT_OPTIONS depends --recurse --no-recommends --no-suggests  --no-conflicts --no-breaks --no-replaces --no-enhances  --no-pre-depends "$PACKAGE" | grep "^\w") | indent
-      cd "${CURRENT_DIR}"
+      # apt-get download get files to current dir, saving it to return later
+      pushd $APT_CACHE_DIR/archives
+      apt-get $APT_OPTIONS download $(apt-cache $APT_OPTIONS depends --recurse --no-recommends --no-suggests  --no-conflicts --no-breaks --no-replaces --no-enhances  --no-pre-depends "$PACKAGE" | grep "^\w") | indent
+      popd > /dev/null
     fi
   }
 
@@ -233,9 +232,9 @@ else
     cat Aptfile | grep -s -e "^:repo:deb " | sed 's/^:repo://g' >>"$APT_SOURCES"
   fi
 
-  topic "Updating apt caches"
-  # Ignore stderr from apt update containing: rm: cannot remove '/var/cache/apt/archives/partial/*.deb': Permission denied
-  apt $APT_OPTIONS update 2> >(grep -v "rm: cannot remove") | indent
+  topic "Updating apt-get caches"
+  # Ignore stderr from apt-get update containing: rm: cannot remove '/var/cache/apt/archives/partial/*.deb': Permission denied
+  apt-get $APT_OPTIONS update 2> >(grep -v "rm: cannot remove") | indent
   for PACKAGE in $(cat Aptfile | grep -v -s -e '^#' | grep -v -s -e "^:repo:"); do
     install_package $PACKAGE
   done
