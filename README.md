@@ -20,8 +20,10 @@ The buildpack will do the following:
 
 | Environment Variable | Description |
 | -------------------- | ----------- |
+| BP_APT_RUNIMAGE_PACKAGES | List of apt packages installed in run-image, if run-image is different from build-image (optional) |
 
-There are no environment variable configuration options.
+If set, the variable `BP_APT_RUNIMAGE_PACKAGES` allows to compare installed packages in the run-image and install from `Aptfile` the packages listed and only the needed dependencies.
+You can list the packages already installed in the run-image with `apt list --installed 2>/dev/null | grep -v 'Listing...' | awk -F'/' '{print $1}' | sort`.
 
 ### Aptfile
 

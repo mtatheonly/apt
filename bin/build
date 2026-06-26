@@ -100,7 +100,20 @@ else
       curl --silent --show-error --fail -L -z "$PACKAGE_FILE" -o "$PACKAGE_FILE" "$PACKAGE" 2>&1 | indent
     else
       topic "Fetching .debs for $PACKAGE"
-      apt-get $APT_OPTIONS -y $APT_FORCE_YES -d install --reinstall "$PACKAGE" | indent
+      if [[ -z $BP_APT_RUNIMAGE_PACKAGES ]]; then
+        apt-get $APT_OPTIONS -y $APT_FORCE_YES -d install --reinstall "$PACKAGE" | indent
+      else
+        local runtime_installed_packages=$(mktemp)
+        echo "${BP_APT_RUNIMAGE_PACKAGES}" | sed 's/,/\n/g' | sort >> $runtime_installed_packages
+        local package_dependencies=$(mktemp)
+        apt-cache $APT_OPTIONS depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances --no-pre-depends "${PACKAGE}" | grep "^\w" | sort >> $package_dependencies
+        local needed_packages=$(mktemp)
+        comm -23 $package_dependencies $runtime_installed_packages | tr '\n' ' ' >> $needed_packages
+        pushd $APT_CACHE_DIR/archives
+        apt-get $APT_OPTIONS download $(cat "${needed_packages}") | indent
+        popd > /dev/null
+        rm $runtime_installed_packages $package_dependencies $needed_packages
+      fi
     fi
   }
 
