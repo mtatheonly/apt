@@ -242,6 +242,14 @@ else
     dpkg -x "$DEB" "$apt_layer/"
   done
 
+  if [[ "x$BP_APT_REMOVE_DEB" == "xtrue" ]]; then
+    topic "Removing downloaded .deb packages"
+    for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
+      basename "$DEB" | indent
+      rm "$DEB"
+    done
+  fi
+
   topic "Writing environment variables"
 
   apt_env_dir=$apt_layer/env

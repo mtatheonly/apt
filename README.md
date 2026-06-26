@@ -20,8 +20,8 @@ The buildpack will do the following:
 
 | Environment Variable | Description |
 | -------------------- | ----------- |
+| BP_APT_REMOVE_DEB | Delete .deb packages after installation if is set to `true` (optional) |
 
-There are no environment variable configuration options.
 
 ### Aptfile
 
